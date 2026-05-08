@@ -1,14 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
-
-export default function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
-    switch (true) {
-        case typeof err === 'string':
-            const is404 = err.toLowerCase().endsWith('not found');
-            const statusCode = is404 ? 404 : 400;
-            return res.status(statusCode).json({ message: err });
-        case err.name === 'UnauthorizedError':
-            return res.status(401).json({ message: 'Unauthorized' });
-        default:
-            return res.status(500).json({ message: err.message });
+export default function validateRequest(req: any, next: any, schema: any) {
+    const options = {
+        abortEarly: false,
+        allowUnknown: true,
+        stripUnknown: true
+    };
+    const { error, value } = schema.validate(req.body, options);
+    if (error) {
+        next(`Validation error: ${error.details.map((x: any) => x.message).join(', ')}`);
+    } else {
+        req.body = value;
+        next();
     }
 }
